@@ -3,9 +3,12 @@ package com.debankar.rbac_project.service;
 import com.debankar.rbac_project.dto.UserCreationDTO;
 import com.debankar.rbac_project.entity.User;
 import com.debankar.rbac_project.enums.Role;
+import com.debankar.rbac_project.enums.TokenType;
 import com.debankar.rbac_project.mapper.UserMapper;
+import com.debankar.rbac_project.repository.TokenRepository;
 import com.debankar.rbac_project.repository.UserRepository;
 import com.debankar.rbac_project.security.JwtTokenProvider;
+import com.debankar.rbac_project.token.Token;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +19,14 @@ import java.util.Set;
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, UserMapper userMapper, JwtTokenProvider jwtTokenProvider) {
+    public UserServiceImpl(UserRepository userRepository, TokenRepository tokenRepository, PasswordEncoder passwordEncoder, UserMapper userMapper, JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
+        this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
         this.jwtTokenProvider = jwtTokenProvider;
@@ -41,7 +46,9 @@ public class UserServiceImpl implements UserService {
             user.setRoles(Set.of(Role.USER));
         }
 
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        String jwtToken = jwtTokenProvider.generateToken(user.getEmail());
+        saveUserToken(savedUser, jwtToken);
 
         return user;
     }
@@ -55,7 +62,38 @@ public class UserServiceImpl implements UserService {
 
         // Generate JWT token
         User user = userOptional.get();
-        return jwtTokenProvider.generateToken(user.getEmail());
+        String jwtToken = jwtTokenProvider.generateToken(user.getEmail());
+        revokeAllUserTokens(user);
+        saveUserToken(user, jwtToken);
+
+        return jwtToken;
+    }
+
+    private void saveUserToken(User user, String jwtToken) {
+        Token token = Token.builder()
+                .user(user)
+                .token(jwtToken)
+                .tokenType(TokenType.BEARER)
+                .revoked(false)
+                .expired(false)
+                .build();
+
+        tokenRepository.save(token);
+    }
+
+    private void revokeAllUserTokens(User user) {
+        List<Token> validUserTokens = tokenRepository.findAllValidTokensByUserId(user.getId());
+
+        if (validUserTokens.isEmpty()) {
+            return;
+        }
+
+        validUserTokens.forEach(token -> {
+            token.setExpired(true);
+            token.setRevoked(true);
+        });
+
+        tokenRepository.saveAll(validUserTokens);
     }
 
     @Override

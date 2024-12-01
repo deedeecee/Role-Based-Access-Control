@@ -1,5 +1,6 @@
 package com.debankar.rbac_project.security;
 
+import com.debankar.rbac_project.repository.TokenRepository;
 import com.debankar.rbac_project.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,10 +19,12 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final TokenRepository tokenRepository;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService userDetailsService, TokenRepository tokenRepository) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userDetailsService = userDetailsService;
+        this.tokenRepository = tokenRepository;
     }
 
     @Override
@@ -31,7 +34,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = getTokenFromRequest(request);
 
-            if (token != null && jwtTokenProvider.validateToken(token)) {
+            Boolean isValidToken = tokenRepository.findByToken(token)
+                    .map(t -> !t.isExpired() && !t.isRevoked())
+                    .orElse(false);
+
+            if (token != null && isValidToken && jwtTokenProvider.validateToken(token)) {
                 String username = jwtTokenProvider.extractUsername(token);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 

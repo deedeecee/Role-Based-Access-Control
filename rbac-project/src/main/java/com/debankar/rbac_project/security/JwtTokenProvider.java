@@ -30,8 +30,6 @@ public class JwtTokenProvider {
         return extractAllClaims(token).getExpiration();
     }
 
-
-
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())

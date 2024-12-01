@@ -1,6 +1,7 @@
 package com.debankar.rbac_project.entity;
 
 import com.debankar.rbac_project.enums.Role;
+import com.debankar.rbac_project.token.Token;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -30,6 +32,9 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     private Set<Role> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Token> tokens;
 
     public User(String username, String email, String password, Set<Role> roles) {
         this.username = username;
