@@ -36,6 +36,53 @@ Before running the project, ensure you have the following installed:
 
 3. **IDE (Integrated Development Environment)**
    - Recommended: IntelliJ IDEA or Eclipse.
+  
+## Using Replit (Testing endpoints without cloning the repository)
+
+### Import the Project into Replit
+
+1. **Create a New Replit Project:**
+   - Go to [Replit](https://replit.com/) and create a new project.
+   - Choose the "Java" template.
+
+2. **Import the Repository:**
+   - Click on the "Add Files" button in the Replit sidebar.
+   - Select "Import from Git".
+   - Enter the following repository URL: `https://github.com/deedeecee/Role-Based-Access-Control.git`
+   - Click "Import".
+
+3. **Install Dependencies:**
+   - Ideally, Replit recognoses the required dependencies and will automatically prompt to download them. If that does not happen, follow the next steps.
+   - Open the terminal in Replit.
+   - Run the following command to build the project and install dependencies:
+     ```bash
+     mvn clean install
+     ```
+
+5. **Run the Application:**
+   - In the terminal, run the following command to start the application:
+     ```bash
+     mvn spring-boot:run
+     ```
+
+### API Endpoints
+
+Once the application is running, you can test the API endpoints using your browser or a REST client like Postman. You will see a window similar to the following:
+![image](https://github.com/user-attachments/assets/c8958310-ce1a-40fe-9d4b-599201739b50)
+
+- Make sure you copy the Dev URL and set the ports to _:8080 → :8080_
+
+#### User Registration
+- **POST <dev_url_provided_by_replit:8080>/api/v1/public/register**
+
+#### User Login
+- **POST <dev_url_provided_by_replit:8080>/api/v1/public/login**
+
+#### User Logout
+- **POST <dev_url_provided_by_replit:8080>/api/v1/public/logout**
+
+#### Other Endpoints
+- Refer to the "API Endpoints" section in the README.md for a complete list of endpoints and their details.
 
 ## Getting Started
 
